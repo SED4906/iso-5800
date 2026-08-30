@@ -1,0 +1,54 @@
+name: Build
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        container:
+          - candela
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+
+      - name: Free disk space
+        uses: jlumbroso/free-disk-space@54081f138730dfa15788a46383842cd2f914a1be # main
+        with:
+          tool-cache: true
+
+      # Some runners have a large /, some of them have an extra /mnt with ~60GiB free space.
+      # This action loop-mounts /var/lib/containers to the larger /mnt if available.
+      - name: Mount BTRFS for podman storage
+        run: bash .github/scripts/mount_btrfs.sh
+
+      - name: Install just and golang
+        run: sudo apt update && sudo apt install -y just golang && sudo apt clean
+
+      - name: Build image-builder container
+        run: sudo just build-image-builder
+
+      - name: Build ${{ matrix.container }} container
+        run: sudo just container ${{ matrix.container }}
+
+      - name: Build ${{ matrix.container }} ISO
+        run: sudo just iso-in-container ${{ matrix.container }}
+
+      - name: Fix output ownership
+        run: sudo chown -R $USER:$USER output/
+
+      - name: Upload disk images and Checksum to Job Artifacts
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          path: output/
+          if-no-files-found: error
+          retention-days: 0
+          compression-level: 0
+          overwrite: true

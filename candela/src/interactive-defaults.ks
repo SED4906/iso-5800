@@ -1,0 +1,1 @@
+bootc --source-imgref registry:ghcr.io/sed4906/candela:latest

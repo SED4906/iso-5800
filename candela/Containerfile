@@ -1,0 +1,3 @@
+FROM ghcr.io/sed4906/candela:latest
+
+RUN --mount=type=bind,source=src,target=/src /src/build.sh
