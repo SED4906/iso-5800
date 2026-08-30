@@ -34,14 +34,14 @@ mv /etc/yum.repos.d /etc/anaconda.repos.d
 ln -s /lib/systemd/system/anaconda.target /etc/systemd/system/default.target
 rm -v /usr/lib/systemd/system-generators/systemd-gpt-auto-generator
 
-rm /usr/lib/systemd/system/autovt@.service
+rm -f /usr/lib/systemd/system/autovt@.service
 ln -s /usr/lib/systemd/system/anaconda-shell@.service /usr/lib/systemd/system/autovt@.service
 
-mkdir /usr/lib/systemd/logind.conf.d
+mkdir -p /usr/lib/systemd/logind.conf.d
 echo "[Login]\nReserveVT=2" > /usr/lib/systemd/logind.conf.d/anaconda-shell.conf
 
 # regenerate the initramfs including the anaconda module
-mkdir "$(realpath /root)"
+mkdir -p "$(realpath /root)"
 kernel=$(kernel-install list --json pretty | jq -r '.[] | select(.has_kernel == true) | .version')
 DRACUT_NO_XATTR=1 dracut -v --force --zstd --reproducible --no-hostonly \
   --add "anaconda" \
@@ -52,5 +52,5 @@ DRACUT_NO_XATTR=1 dracut -v --force --zstd --reproducible --no-hostonly \
 cp /src/interactive-defaults.ks /usr/share/anaconda/interactive-defaults.ks
 
 # set the defaults for (bootc-)image-builder
-mkdir /usr/lib/bootc-image-builder
+mkdir -p /usr/lib/bootc-image-builder
 cp /src/iso.yaml /usr/lib/bootc-image-builder/iso.yaml
